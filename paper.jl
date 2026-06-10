@@ -1,9 +1,9 @@
 fold_redirect = "/Users/tejasramdas/Desktop/repos/cell_learning/stentor_habituation"
 fig_folder = "$fold_redirect/analysis/main_analysis/figs/paper_figs/"
-pkg_folder = "$fold_redirect/analysis/"
+# pkg_folder = "$fold_redirect/analysis/"
 
 using Pkg
-Pkg.activate(pkg_folder)
+Pkg.activate(".")
 
 println("Loading packages...")
 

@@ -1,5 +1,3 @@
-fold_redirect = "/Users/tejasramdas/Desktop/repos/cell_learning/stentor_habituation"
-
 fold_redirect = "."
 
 fig_folder = "$fold_redirect/analysis/main_analysis/figs/paper_figs/"
