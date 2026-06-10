@@ -16,7 +16,7 @@ Habituation—the decrement in response to a series of stimuli—is a widespread
 This repo contains code and data files for reproducing the analysis and figures in the paper.
 
 - `paper.jl` — main script for generating all figures
-- `processed_data/colated.jld2` — collated behavioral data
+- `processed_data/collated.jld2` — collated behavioral data
 - `processed_data/inferred_chains.jld2` — pre-computed MCMC chains
 
 ## Citation

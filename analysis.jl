@@ -42,7 +42,7 @@ end
 
 FOLDER = "processed_data"
 
-processed_data = load("$fold_redirect/analysis/main_analysis/$FOLDER/processed_data.jld2")["data"]
+processed_data = load("$fold_redirect/analysis/main_analysis/$FOLDER/collated.jld2")["data"]
 
 
 # ============================================
