@@ -22,3 +22,17 @@ This repo contains code and data files for reproducing the analysis and figures 
 ## Citation
 
 Ramdas, T., Doan, N., Theroux, A., & Gershman, S. J. (2026). A quantitative portrait of habituation in *Stentor coeruleus*. bioRxiv. https://doi.org/10.64898/2026.06.09.731162
+
+```bibtex
+@article {Ramdas2026,
+	author = {Ramdas, Tejas and Doan, Nhi and Theroux, Austen and Gershman, Samuel J},
+	title = {A quantitative portrait of habituation in Stentor coeruleus},
+	elocation-id = {2026.06.09.731162},
+	year = {2026},
+	doi = {10.64898/2026.06.09.731162},
+	publisher = {Cold Spring Harbor Laboratory},
+	URL = {https://www.biorxiv.org/content/early/2026/06/10/2026.06.09.731162},
+	eprint = {https://www.biorxiv.org/content/early/2026/06/10/2026.06.09.731162.full.pdf},
+	journal = {bioRxiv}
+}
+```
