@@ -25,7 +25,7 @@ println("Loading data...")
 # CHAINS_FOLDER = "chains"
 
 inferred_chains = load("$fold_redirect/analysis/main_analysis/processed_data/inferred_chains.jld2", "chains")
-processed_data = load("$fold_redirect/analysis/main_analysis/processed_data/colated.jld2", "data")
+processed_data = load("$fold_redirect/analysis/main_analysis/processed_data/collated.jld2", "data")
 
 data_1_isi_1_iti = processed_data[get_key(60, 3600)]
 responses = processed_data[get_key(60, 3600)]["control_data"]
@@ -229,6 +229,7 @@ function make_fig7()
     # hidexdecorations!.([ax6_1], ticks=true, ticklabels=false, label=false)
     plot_curves(ax6_1[1], extract_params_median_turing(chain[:trial_1]), half_max=true)
     plot_curves(ax6_1[1], extract_params_median_turing(chain[:trial_2]), label="Trial 2", color=:gray, half_max=true)
+    axislegend(ax6_1[1], position=:rt, fontsize=10)
     # Vertical dotted lines from x-axis up to half-max scatter point
     p1 = extract_params_median_turing(chain[:trial_1])[:pop]
     p2 = extract_params_median_turing(chain[:trial_2])[:pop]
@@ -280,7 +281,7 @@ function make_fig7()
     return fig6
 end
 
-function make_fig8()
+function make_fig8(; potentiation_isi_list=[1, 2, 3])
     # Figure 7 shows inferred parameters for all conditions with error bars
     fig7 = Figure(size=(1500, 500), fontsize=24)
     ax7_1 = Makie.Axis(fig7[1:2, 1:2])
@@ -300,12 +301,12 @@ function make_fig8()
     [ax.alignmode = Outside() for ax in ax7_2]
     [ax.alignmode = Outside() for ax in ax7_3]
     plot_recovery_by_iti(inferred_chains, ax7_1, isi_list=[1, 2, 3])
-    plot_b_m_by_iti(inferred_chains, ax7_2[1], isi_list=[1, 2, 3])
-    plot_trial_diff_ratio_by_iti(inferred_chains, ax7_2[2], isi_list=[1, 2, 3])
-    plot_derivative_y_diff_by_iti(inferred_chains, ax7_2[3], isi_list=[1, 2, 3])
-    plot_recovery_vs_b_m_0(inferred_chains, ax7_3[1], isi_list=[1, 2, 3])
-    plot_recovery_vs_trial_diff_ratio(inferred_chains, ax7_3[2], isi_list=[1, 2, 3])
-    plot_recovery_vs_derivative_diff(inferred_chains, ax7_3[3], isi_list=[1, 2, 3])
+    plot_b_m_by_iti(inferred_chains, ax7_2[1], isi_list=potentiation_isi_list)
+    plot_trial_diff_ratio_by_iti(inferred_chains, ax7_2[2], isi_list=potentiation_isi_list)
+    plot_derivative_y_diff_by_iti(inferred_chains, ax7_2[3], isi_list=potentiation_isi_list)
+    plot_recovery_vs_b_m_0(inferred_chains, ax7_3[1], isi_list=[1, 2, 3], plot_ci=true)
+    plot_recovery_vs_trial_diff_ratio(inferred_chains, ax7_3[2], isi_list=[1, 2, 3], plot_ci=true)
+    plot_recovery_vs_derivative_diff(inferred_chains, ax7_3[3], isi_list=[1, 2, 3], plot_ci=true)
     ylims!(ax7_1, -0.0, 1.2)
     ylims!.([ax7_2[1], ax7_3[1]], -0.5, 1)
     ylims!.([ax7_2[2], ax7_3[2]], -5, 15)
@@ -327,6 +328,115 @@ function make_fig8()
     Label(fig7[2, 4, TopLeft()], "F", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
     Label(fig7[2, 5, TopLeft()], "G", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
     return fig7
+end
+
+function make_fig_s1()
+    fig_s1 = Figure(size=(1600, 520), fontsize=22)
+    ax1 = Axis(fig_s1[1, 1], xlabel="Stimulus number", ylabel="Response probability", title="Habituation curve")
+    ax2 = Axis(fig_s1[1, 2], xlabel="Stimulus number", ylabel="Learning rate (dp/ds)", title="Learning-rate curve")
+    ax3 = Axis(fig_s1[1, 3], xlabel="Response probability", ylabel="Learning rate (dp/ds)", title="Phase portrait")
+    colgap!(fig_s1.layout, 35)
+
+    xs = 1:0.1:60
+    marker_xs = 1:60
+    K = 20.0
+    c = 0.9
+    d = 0.1
+
+    examples = [
+        (n=5.0, color=colorant"#0072B2", label="Switch-like (n > 1)"),
+        (n=0.7, color=colorant"#D55E00", label="Gradual (n < 1)"),
+    ]
+
+    for ex in examples
+        y = hill.(xs, ex.n, K, c, d)
+        dy = hill_derivative.(xs, ex.n, K, c, d)
+        marker_y = hill.(marker_xs, ex.n, K, c, d)
+        marker_dy = hill_derivative.(marker_xs, ex.n, K, c, d)
+
+        lines!(ax1, xs, y, color=ex.color, linewidth=1.5, label=ex.label)
+        scatter!(ax1, marker_xs, marker_y, color=ex.color, markersize=8)
+
+        lines!(ax2, xs, dy, color=ex.color, linewidth=1.5)
+        scatter!(ax2, marker_xs, marker_dy, color=ex.color, markersize=8)
+
+        lines!(ax3, y, dy, color=ex.color, linewidth=1.5)
+        scatter!(ax3, marker_y, marker_dy, color=ex.color, markersize=8)
+    end
+
+    axislegend(ax1, position=:rt, fontsize=10)
+    xlims!(ax1, 1, 60)
+    xlims!(ax2, 1, 60)
+    xlims!(ax3, 0, 1)
+    ylims!(ax1, 0, 1)
+    ylims!(ax2, -0.06, 0.005)
+    ylims!(ax3, -0.06, 0.005)
+    [ax.xgridvisible = false for ax in [ax1, ax2, ax3]]
+    [ax.ygridvisible = false for ax in [ax1, ax2, ax3]]
+    [ax.alignmode = Outside() for ax in [ax1, ax2, ax3]]
+
+    Label(fig_s1[1, 1, TopLeft()], "A", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
+    Label(fig_s1[1, 2, TopLeft()], "B", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
+    Label(fig_s1[1, 3, TopLeft()], "C", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
+    return fig_s1
+end
+
+function make_fig_s2()
+    fig_s2 = Figure(size=(1600, 520), fontsize=22)
+    ax1 = Axis(fig_s2[1, 1], xlabel="Stimulus number", ylabel="Response probability", title="Habituation curve")
+    ax2 = Axis(fig_s2[1, 2], xlabel="Stimulus number", ylabel="Learning rate (dp/ds)", title="Learning-rate curve")
+    ax3 = Axis(fig_s2[1, 3], xlabel="Response probability", ylabel="Learning rate (dp/ds)", title="Phase portrait")
+    colgap!(fig_s2.layout, 35)
+
+    xs = 1:0.1:60
+    marker_xs = 1:60
+    shift = 10.0
+
+    trial_1 = (n=5.0, K=24.0, c=0.9, d=0.1, color=:black, label="Trial 1")
+    trial_2 = (n=5.2, K=24.0, c=0.88, d=0.12, color=:gray, label="Trial 2")
+
+    y1 = hill.(xs, trial_1.n, trial_1.K, trial_1.c, trial_1.d)
+    dy1 = hill_derivative.(xs, trial_1.n, trial_1.K, trial_1.c, trial_1.d)
+    marker_y1 = hill.(marker_xs, trial_1.n, trial_1.K, trial_1.c, trial_1.d)
+    marker_dy1 = hill_derivative.(marker_xs, trial_1.n, trial_1.K, trial_1.c, trial_1.d)
+
+    shifted_xs = xs .+ shift
+    shifted_marker_xs = marker_xs .+ shift
+    y2 = hill.(shifted_xs, trial_2.n, trial_2.K, trial_2.c, trial_2.d)
+    dy2 = hill_derivative.(shifted_xs, trial_2.n, trial_2.K, trial_2.c, trial_2.d)
+    marker_y2 = hill.(shifted_marker_xs, trial_2.n, trial_2.K, trial_2.c, trial_2.d)
+    marker_dy2 = hill_derivative.(shifted_marker_xs, trial_2.n, trial_2.K, trial_2.c, trial_2.d)
+
+    lines!(ax1, xs, y1, color=trial_1.color, linewidth=1.5, label=trial_1.label)
+    scatter!(ax1, marker_xs, marker_y1, color=trial_1.color, markersize=8)
+    lines!(ax1, xs, y2, color=trial_2.color, linewidth=1.5, label=trial_2.label)
+    scatter!(ax1, marker_xs, marker_y2, color=trial_2.color, markersize=8)
+
+    lines!(ax2, xs, dy1, color=trial_1.color, linewidth=1.5)
+    scatter!(ax2, marker_xs, marker_dy1, color=trial_1.color, markersize=8)
+    lines!(ax2, xs, dy2, color=trial_2.color, linewidth=1.5)
+    scatter!(ax2, marker_xs, marker_dy2, color=trial_2.color, markersize=8)
+
+    lines!(ax3, y1, dy1, color=trial_1.color, linewidth=1.5)
+    scatter!(ax3, marker_y1, marker_dy1, color=trial_1.color, markersize=8)
+    lines!(ax3, y2, dy2, color=trial_2.color, linewidth=1.5)
+    scatter!(ax3, marker_y2, marker_dy2, color=trial_2.color, markersize=8)
+
+    axislegend(ax1, position=:rt, fontsize=10)
+    xlims!(ax1, 1, 60)
+    xlims!(ax2, 1, 60)
+    xlims!(ax3, 0, 1)
+    ylims!(ax1, 0, 1)
+    ylims!(ax2, -0.06, 0.005)
+    ylims!(ax3, -0.06, 0.005)
+    [ax.xgridvisible = false for ax in [ax1, ax2, ax3]]
+    [ax.ygridvisible = false for ax in [ax1, ax2, ax3]]
+    [ax.alignmode = Outside() for ax in [ax1, ax2, ax3]]
+
+    Label(fig_s2[1, 1, TopLeft()], "A", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
+    Label(fig_s2[1, 2, TopLeft()], "B", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
+    Label(fig_s2[1, 3, TopLeft()], "C", fontsize=24, padding=(5, 5, 5, 5), font="Arial Bold")
+    return fig_s2
 end
 
 fig1 = make_fig1()
@@ -374,11 +484,31 @@ save(fig_folder * "/svg/fig8.svg", fig8; backend=CairoMakie)
 save(fig_folder * "/pdf/fig8.pdf", fig8; backend=CairoMakie)
 println("Saved figure 8...")
 
+fig8_v2 = make_fig8(potentiation_isi_list=[1])
+save(fig_folder * "/svg/fig8_v2.svg", fig8_v2; backend=CairoMakie)
+save(fig_folder * "/pdf/fig8_v2.pdf", fig8_v2; backend=CairoMakie)
+println("Saved figure 8 v2...")
 
-fig_s1, axs_s1 = plot_trial1_curves_by_iti(inferred_chains, [1, 2, 3], [1, 2, 3, 5])
+fig8_v3 = make_fig8(potentiation_isi_list=[2])
+save(fig_folder * "/svg/fig8_v3.svg", fig8_v3; backend=CairoMakie)
+save(fig_folder * "/pdf/fig8_v3.pdf", fig8_v3; backend=CairoMakie)
+println("Saved figure 8 v3...")
+
+fig8_v4 = make_fig8(potentiation_isi_list=[3])
+save(fig_folder * "/svg/fig8_v4.svg", fig8_v4; backend=CairoMakie)
+save(fig_folder * "/pdf/fig8_v4.pdf", fig8_v4; backend=CairoMakie)
+println("Saved figure 8 v4...")
+
+
+fig_s1 = make_fig_s1()
 save(fig_folder * "/svg/fig_s1.svg", fig_s1; backend=CairoMakie)
 save(fig_folder * "/pdf/fig_s1.pdf", fig_s1; backend=CairoMakie)
 println("Saved figure s1...")
+
+fig_s2 = make_fig_s2()
+save(fig_folder * "/svg/fig_s2.svg", fig_s2; backend=CairoMakie)
+save(fig_folder * "/pdf/fig_s2.pdf", fig_s2; backend=CairoMakie)
+println("Saved figure s2...")
 
 fig_s2, axs_s2 = plot_all_sc_curves_vs_derivatives(inferred_chains; isi_vals=[1, 2, 3])
 display(fig_s2)
@@ -522,7 +652,3 @@ iti = 5
 println(calculate_statistic_ci_vec(inferred_chains[get_key(1 * 60, iti * 3600)][:trial_1], inferred_chains[get_key(1 * 60, iti * 3600)][:trial_2],
     inferred_chains[get_key(3 * 60, iti * 3600)][:trial_1], inferred_chains[get_key(3 * 60, iti * 3600)][:trial_2],
     (c1, c2) -> c2[:pop][:c_1_0] ./ c1[:pop][:c_1_0], (v1, v2) -> v2 ./ v1; prob=0.95))
-
-
-
-

@@ -615,11 +615,15 @@ begin
         for isi in isi_vals
             for (j, iti) in enumerate(iti_vals)
                 key = get_key(isi * 60, iti * 3600)
-                for (trial_key, clr) in [(:trial_1, :black), (:trial_2, :gray)]
+                first_panel = isi == first(isi_vals) && j == 1
+                for (trial_key, clr, lbl) in [(:trial_1, :black, "Trial 1"), (:trial_2, :gray, "Trial 2")]
                     meds = extract_params_median_turing(chains[key][trial_key])
-                    plot_curves(axs[isi, j], meds, axlabel=false, color=clr)
+                    plot_curves(axs[isi, j], meds, axlabel=false, color=clr, label=first_panel ? lbl : false)
                     samps = extract_params_samples_turing(chains[key][trial_key])
                     plot_band(axs[isi, j], samps, color=clr)
+                end
+                if first_panel
+                    axislegend(axs[isi, j], position=:rt, fontsize=10)
                 end
                 xlims!(axs[isi, j], 1, 60)
                 ylims!(axs[isi, j], 0, 1)
@@ -699,8 +703,13 @@ begin
         fig, axs = make_isi_iti_axis_grid(isi_vals, iti_vals, vert_label="Learning rate", horz_label="Response probability")
         for isi in isi_vals
             for (j, iti) in enumerate(iti_vals)
-                plot_curves_vs_derivatives(axs[isi, j], extract_params_median_turing(chains[get_key(isi * 60, iti * 3600)][:trial_1]), label=false, color=:black)
-                plot_curves_vs_derivatives(axs[isi, j], extract_params_median_turing(chains[get_key(isi * 60, iti * 3600)][:trial_2]), label=false, color=:gray)
+                key = get_key(isi * 60, iti * 3600)
+                first_panel = isi == first(isi_vals) && j == 1
+                plot_curves_vs_derivatives(axs[isi, j], extract_params_median_turing(chains[key][:trial_1]), label=first_panel ? "Trial 1" : false, color=:black)
+                plot_curves_vs_derivatives(axs[isi, j], extract_params_median_turing(chains[key][:trial_2]), label=first_panel ? "Trial 2" : false, color=:gray)
+                if first_panel
+                    axislegend(axs[isi, j], position=:lb, fontsize=10)
+                end
             end
         end
         xlims!.(axs, 0, 1)
@@ -1121,7 +1130,7 @@ begin
         vlines!(ax, [0.0], color=:gray, linestyle=:dash)
         hlines!(ax, [0.0], color=:gray, linestyle=:dash)
         # ablines!(ax, 0, 1, color=:gray, linestyle=:dot)
-        ax.xlabel = "log(Recovery)"
+        ax.xlabel = "Initial response ratio"
         ax.ylabel = "Initial rate ratio"
         ax.xgridvisible = false
         ax.ygridvisible = false
@@ -1167,7 +1176,7 @@ begin
         end
         hlines!(ax, [0.0], color=:gray, linestyle=:dash)
         vlines!(ax, [0.0], color=:gray, linestyle=:dash)
-        ax.xlabel = "log(Recovery)"
+        ax.xlabel = "Initial response ratio"
         ax.ylabel = "Phase plot diff"
         ax.xgridvisible = false
         ax.ygridvisible = false
